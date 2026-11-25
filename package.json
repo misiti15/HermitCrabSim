@@ -1,0 +1,17 @@
+{
+  "name": "hermit-crab-sim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A perpetual, slowly evolving simulation of four hermit crabs: Sheladon, Sheladactyl, Spike and Kyle.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "genesis": "node scripts/genesis.js",
+    "advance": "node scripts/advance.js",
+    "preview": "node scripts/preview.js",
+    "serve": "npx --yes http-server docs -p 8080 -c-1"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  }
+}

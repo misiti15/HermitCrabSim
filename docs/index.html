@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hermit Crab Sim</title>
+<meta name="description" content="A live, perpetual simulation of four hermit crabs — Sheladon, Sheladactyl, Spike and Kyle — slowly learning, talking, and changing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Hermit Crab Sim</h1>
+    <p class="sub" id="subline">Loading the tank…</p>
+  </div>
+  <div class="clock" aria-live="polite">
+    <span class="live-dot" id="liveDot"></span>
+    <span id="clockMode">Live</span>
+    <span class="mono" id="clockText">--:--</span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-label="Tank view">
+    <div class="tank-tabs" id="tankTabs" role="tablist"></div>
+    <div class="tank-wrap" id="tankWrap">
+      <canvas id="tank" aria-label="Top-down view of the tank. Click a crab to follow it."></canvas>
+      <div class="banner" id="banner" hidden></div>
+    </div>
+    <div class="controls">
+      <button id="liveBtn" class="chip on" type="button">Live</button>
+      <label class="ctl">Day
+        <select id="daySelect"></select>
+      </label>
+      <label class="ctl">Speed
+        <select id="speedSelect">
+          <option value="1">1×</option>
+          <option value="10">10×</option>
+          <option value="60">60×</option>
+          <option value="300">300×</option>
+          <option value="1200">1200×</option>
+        </select>
+      </label>
+      <input id="scrub" type="range" min="0" max="86399" step="60" aria-label="Time of day">
+      <label class="ctl tog"><input type="checkbox" id="glossToggle" checked> Translate speech</label>
+    </div>
+    <ol class="feed" id="feed" aria-label="What just happened"></ol>
+  </section>
+
+  <aside class="panel">
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="colony" class="on" type="button">Colony</button>
+      <button role="tab" data-tab="journal" type="button">Journal</button>
+      <button role="tab" data-tab="language" type="button">Language</button>
+      <button role="tab" data-tab="growth" type="button">Growth</button>
+      <button role="tab" data-tab="about" type="button">About</button>
+    </nav>
+    <div class="tabpane" id="pane-colony"></div>
+    <div class="tabpane" id="pane-journal" hidden></div>
+    <div class="tabpane" id="pane-language" hidden></div>
+    <div class="tabpane" id="pane-growth" hidden></div>
+    <div class="tabpane" id="pane-about" hidden>
+      <h2>What this is</h2>
+      <p>Four real hermit crabs share a tank: <b>Sheladon</b>, <b>Sheladactyl</b>, <b>Spike</b> and <b>Kyle</b>. This is their simulated counterpart: the same tank, the same coconut hut, moss trail, water dish and heat lamps, and four simulated crabs living in it around the clock.</p>
+      <p>They start as ordinary land hermit crabs: mostly active at night, following smell to food, keeping their gills damp, trading shells, piling up together and chirping. Over a long time they may learn from each other, invent words, change shape across molts, and do things nobody planned. Nobody knows where it leads. That is the experiment.</p>
+      <h2>How it works</h2>
+      <ul>
+        <li><b>Every minute is simulated.</b> Once a day the next day is computed in advance. Watching "live" shows exactly what is happening now, and everyone sees the same crabs.</li>
+        <li><b>Nothing is scheduled.</b> Abilities are possible only once a crab's mind is ready, and even then they arrive by chance and through experience and contact with other crabs. Two runs of the same tank would turn out differently.</li>
+        <li><b>Language is invented.</b> Words are made up by individual crabs and spread through conversation. Speech shows the crabs' own words, and a translation can be toggled on.</li>
+        <li><b>Bodies change at molts</b>, toward what the crab actually uses: climbers grow longer legs, talkers a wider range of sounds, builders finer claws. Young crabs inherit their parents' bodies, with variation.</li>
+        <li><b>Inner thoughts are written by Claude</b> once a day. It is shown what each crab experienced and is held to that crab's current level of mind. Claude cannot grant abilities or move crabs. It can only nudge what a crab feels like doing, and propose ideas that the simulation may or may not accept.</li>
+        <li><b>Sexes are unknown</b>, as they are for the real crabs, until something in the simulation reveals them.</li>
+      </ul>
+      <h2>Stewardship</h2>
+      <p>The history is never rewritten. Changes to the rules only apply from the day they are made, and every outside intervention is recorded in the journal. Source, rules and data are all in the project repository.</p>
+    </div>
+  </aside>
+</main>
+
+<div class="tooltip" id="tooltip" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
