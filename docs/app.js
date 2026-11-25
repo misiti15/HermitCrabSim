@@ -12,6 +12,7 @@ const S = {
   index: null, world: null, history: [], days: new Map(), minds: new Map(),
   mode: 'live', date: null, t: 0, speed: 60, viewTank: 'home', selected: null, gloss: true,
   lastReal: performance.now(), colors: {}, headings: new Map(), stale: false,
+  view: '3d', v3: null,
 };
 const $ = (id) => document.getElementById(id);
 const canvas = $('tank');
@@ -61,6 +62,10 @@ async function init() {
   goLive();
   wire();
   renderPanels();
+  renderCrabBar();
+  document.querySelectorAll('.camrow button').forEach((b) => b.onclick = () => setCam(b.dataset.cam));
+  setTimeout(() => { const h = $('hint'); if (h) h.style.opacity = '0'; }, 9000);
+  await start3D();
   requestAnimationFrame(frame);
   setInterval(tick, 1000);
 }
@@ -128,8 +133,84 @@ async function frame(now) {
     }
   }
   const day = await loadDay(S.date);
-  draw(day);
+  if (S.view === '3d' && S.v3 && day) {
+    try { S.v3.render(frameData(day)); } catch (e) { console.error(e); useMap('The 3D view hit a problem, so the map is shown instead.'); }
+  } else draw(day);
   requestAnimationFrame(frame);
+}
+
+// Everything the 3D view needs for one frame.
+function frameData(day) {
+  const tank = S.world.tanks.find((t) => t.id === S.viewTank) ?? S.world.tanks[0];
+  const off = day.tzOffsetMinutes ?? 0;
+  const localHour = ((S.t / 3600 + off / 60) % 24 + 24) % 24;
+  const live = S.mode === 'live';
+  const crabs = [];
+  for (const c of S.world.crabs) {
+    const st = stateAt(day, c.id, S.t);
+    if (!st || st.tank !== tank.id) continue;
+    crabs.push({ c, st, color: S.colors[c.id],
+      said: latest(day.speech, c.id, S.t, live ? 75 : Math.max(75, S.speed * 6)),
+      thought: latest(day.thoughts, c.id, S.t, live ? 240 : Math.max(240, S.speed * 10)) });
+  }
+  return { world: S.world, tank, t: S.t, localHour, crabs, selected: S.selected, gloss: S.gloss };
+}
+
+async function start3D() {
+  try {
+    const probe = document.createElement('canvas');
+    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error('no WebGL');
+    const { TankView3D } = await import('./view3d.js');
+    S.v3 = new TankView3D($('view3d'), $('overlay'), { onPick: (id) => pick(id) });
+  } catch (e) {
+    console.warn('3D unavailable:', e);
+    useMap('Your device could not start the 3D view, so the map is shown instead.');
+  }
+}
+function useMap(msg) {
+  S.view = 'map';
+  $('view3d').hidden = true; $('tank').hidden = false; sizeCanvas();
+  if (msg) { const b = $('banner'); b.hidden = false; b.textContent = msg; }
+}
+function setCam(mode) {
+  if (mode === 'map') { S.view = 'map'; $('view3d').hidden = true; $('tank').hidden = false; sizeCanvas(); addMapBack(); return; }
+  if ((mode === 'follow' || mode === 'eye') && !S.selected) { const first = S.world.crabs.find((c) => c.alive); S.selected = first?.id ?? null; renderColony(); }
+  S.v3.userMoved = false;
+  S.v3.setView(mode);
+  document.querySelectorAll('.camrow button').forEach((b) => b.classList.toggle('on', b.dataset.cam === mode));
+}
+function addMapBack() {
+  if ($('mapBack')) { $('mapBack').hidden = false; return; }
+  const b = document.createElement('button'); b.id = 'mapBack'; b.type = 'button'; b.className = 'chip on'; b.textContent = 'Back to 3D';
+  b.onclick = () => { S.view = '3d'; $('view3d').hidden = false; $('tank').hidden = true; b.hidden = true; };
+  $('tankWrap').after(b);
+}
+function pick(id) {
+  S.selected = id;
+  if (id) {
+    const c = S.world.crabs.find((x) => x.id === id);
+    if (c && c.tank !== S.viewTank) S.viewTank = c.tank;
+    if (S.v3 && S.v3.mode !== 'eye') setCam('follow');
+  } else if (S.v3 && (S.v3.mode === 'follow' || S.v3.mode === 'eye')) setCam('front');
+  renderColony(); renderCrabBar();
+  const card = id && document.querySelector(`[data-crab="${id}"]`);
+  const pane = $('pane-colony');
+  if (card && pane.scrollHeight > pane.clientHeight) pane.scrollTo({ top: card.offsetTop - pane.offsetTop - 8, behavior: 'smooth' });
+}
+function renderCrabBar(day) {
+  const el = $('crabbar');
+  const living = S.world.crabs.filter((c) => c.alive);
+  if (el.childElementCount !== living.length) {
+    el.innerHTML = living.map((c) => `<button type="button" data-id="${c.id}"><span class="dot" style="background:${S.colors[c.id]}"></span><span class="txt"><span class="nm">${esc(c.name)}</span><span class="act" id="bar-${c.id}">…</span></span></button>`).join('');
+    el.querySelectorAll('button').forEach((b) => b.onclick = () => pick(S.selected === b.dataset.id ? null : b.dataset.id));
+  }
+  el.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.id === S.selected));
+  if (!day) return;
+  for (const c of living) {
+    const st = stateAt(day, c.id, S.t);
+    const out = document.getElementById('bar-' + c.id);
+    if (out && st) out.textContent = (ACT[st.act] ?? st.act) + (st.tank !== S.viewTank ? ` · in ${S.world.tanks.find((t) => t.id === st.tank)?.name}` : '');
+  }
 }
 
 function tick() {
@@ -145,6 +226,7 @@ function tick() {
     const living = S.world.crabs.filter((c) => c.alive);
     $('subline').textContent = `Day ${d.day} of ${living.map((c) => c.name).join(', ')}${living.length > 4 ? '' : ''}. ${d.headline}`;
     updateDoing(d);
+    renderCrabBar(d);
     renderFeed(d);
     renderTankTabs(d);
   });
@@ -449,8 +531,7 @@ function onCanvasClick(e) {
   const x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr;
   const hit = (canvas._vis ?? []).find((v) => Math.hypot(v.x - x, v.y - y) < v.r * 1.8 + 10 * dpr);
   S.selected = hit ? (S.selected === hit.id ? null : hit.id) : null;
-  renderColony();
-  if (S.selected) document.querySelector(`[data-crab="${S.selected}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  renderColony(); renderCrabBar();
 }
 
 // ---------------------------------------------------------------- panels --
@@ -486,7 +567,7 @@ function renderColony() {
   const gone = S.world.crabs.filter((c) => !c.alive);
   el.innerHTML = crabs.map((c) => crabCard(c)).join('') + (gone.length ? `<h2>Remembered</h2>${gone.map((c) => `<p class="muted">${esc(c.name)}, died on day ${c.diedDay}.</p>`).join('')}` : '') +
     `<p class="muted" style="font-size:.8rem">Figures are as of the end of the latest simulated day (day ${S.world.day}).</p>`;
-  el.querySelectorAll('.crab-head').forEach((h) => h.onclick = () => { const id = h.parentElement.dataset.crab; S.selected = S.selected === id ? null : id; const c = S.world.crabs.find((x) => x.id === id); if (c) S.viewTank = c.tank; renderColony(); });
+  el.querySelectorAll('.crab-head').forEach((h) => h.onclick = () => { const id = h.parentElement.dataset.crab; pick(S.selected === id ? null : id); });
 }
 function crabCard(c) {
   const caps = Object.keys(c.mind.caps).filter((k) => !k.startsWith('discovery:')).map((k) => CAPNAMES[k] ?? k);

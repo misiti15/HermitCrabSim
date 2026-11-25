@@ -4,7 +4,9 @@
   "private": true,
   "description": "A perpetual, slowly evolving simulation of four hermit crabs: Sheladon, Sheladactyl, Spike and Kyle.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "genesis": "node scripts/genesis.js",
     "advance": "node scripts/advance.js",
@@ -13,5 +15,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0"
+  },
+  "devDependencies": {
+    "three": "^0.160.0"
   }
 }

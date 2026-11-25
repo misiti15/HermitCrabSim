@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
 <body>
 <header class="top">
@@ -27,9 +28,22 @@
   <section class="stage" aria-label="Tank view">
     <div class="tank-tabs" id="tankTabs" role="tablist"></div>
     <div class="tank-wrap" id="tankWrap">
-      <canvas id="tank" aria-label="Top-down view of the tank. Click a crab to follow it."></canvas>
+      <div class="view3d" id="view3d">
+        <div class="overlay" id="overlay"></div>
+        <div class="camrow" role="group" aria-label="Camera">
+          <button type="button" data-cam="front" class="on">Front</button>
+          <button type="button" data-cam="top">Top</button>
+          <button type="button" data-cam="tour">Tour</button>
+          <button type="button" data-cam="follow">Follow</button>
+          <button type="button" data-cam="eye">Crab's eye</button>
+          <button type="button" data-cam="map">Map</button>
+        </div>
+        <p class="hint" id="hint">Drag to look around · pinch or scroll to zoom · tap a crab to follow it</p>
+      </div>
+      <canvas id="tank" hidden aria-label="Top-down map of the tank. Click a crab to follow it."></canvas>
       <div class="banner" id="banner" hidden></div>
     </div>
+    <div class="crabbar" id="crabbar" aria-label="The crabs"></div>
     <div class="controls">
       <button id="liveBtn" class="chip on" type="button">Live</button>
       <label class="ctl">Day
