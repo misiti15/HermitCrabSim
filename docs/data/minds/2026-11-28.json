@@ -1,0 +1,43 @@
+{
+ "date": "2026-11-28",
+ "source": "rules",
+ "model": null,
+ "journal": null,
+ "crabs": {
+  "sheladon": {
+   "thoughts": [
+    "warm sand."
+   ],
+   "focus": "warm sand.",
+   "intentions": null,
+   "idea": null
+  },
+  "sheladactyl": {
+   "thoughts": [
+    "smell… food.",
+    "dry. water.",
+    "shell… heavy… good."
+   ],
+   "focus": "smell… food.",
+   "intentions": null,
+   "idea": null
+  },
+  "spike": {
+   "thoughts": [
+    "warm sand."
+   ],
+   "focus": "warm sand.",
+   "intentions": null,
+   "idea": null
+  },
+  "kyle": {
+   "thoughts": [
+    "dry. water.",
+    "other one near."
+   ],
+   "focus": "dry. water.",
+   "intentions": null,
+   "idea": null
+  }
+ }
+}
